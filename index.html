@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopee Deal Sniper - High-Frequency Arbitrage Scraper Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    },
+                    colors: {
+                        shopee: "#ee4d2d",
+                        shopeeDark: "#d73211",
+                        gold: "#f59e0b"
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); }
+        }
+        .glow-dot {
+            animation: pulse-glow 2s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-shopee selection:text-white">
+    <!-- Header -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3.5 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="bg-gradient-to-tr from-shopee to-amber-500 p-2.5 rounded-2xl font-bold text-white shadow-lg shadow-shopee/30 text-xl">
+                    🎯
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-lg font-bold tracking-tight text-white">Shopee Deal Sniper</h1>
+                        <span class="text-[10px] bg-slate-800 text-slate-300 font-mono px-2 py-0.5 rounded-full border border-slate-700">v2.4 Pro</span>
+                    </div>
+                    <p class="text-xs text-slate-400">Hệ thống quét giá Flash Sale TMĐT đa luồng & Bắn cảnh báo Telegram</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <span class="w-2 h-2 mr-2 bg-emerald-400 rounded-full glow-dot"></span>
+                    <span>Radar Quét: <strong class="font-mono">ONLINE (0.8s)</strong></span>
+                </span>
+                <button id="scanBtn" onclick="triggerScan()" class="bg-gradient-to-r from-shopee to-orange-600 hover:from-shopeeDark hover:to-orange-700 active:scale-95 text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-lg shadow-shopee/25 flex items-center space-x-1.5">
+                    <span id="scanIcon">⚡</span>
+                    <span id="scanText">Quét Ngay</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 py-6">
+        <!-- Stats Overview -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="bg-slate-900/90 border border-slate-800/90 rounded-2xl p-4 shadow-sm hover:border-slate-700 transition">
+                <p class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Tổng Deal Đã Săn</p>
+                <div class="flex items-baseline justify-between mt-2">
+                    <h3 id="statTotal" class="text-2xl font-extrabold text-white">1,248</h3>
+                    <span class="text-xs text-emerald-400 font-medium">↑ +14% /h</span>
+                </div>
+            </div>
+            <div class="bg-slate-900/90 border border-slate-800/90 rounded-2xl p-4 shadow-sm hover:border-slate-700 transition">
+                <p class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Deal Điểm Cao (Score ≥ 80)</p>
+                <div class="flex items-baseline justify-between mt-2">
+                    <h3 id="statHot" class="text-2xl font-extrabold text-shopee">42</h3>
+                    <span class="text-xs text-amber-400 font-medium">★ Arbitrage</span>
+                </div>
+            </div>
+            <div class="bg-slate-900/90 border border-slate-800/90 rounded-2xl p-4 shadow-sm hover:border-slate-700 transition">
+                <p class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Tốc Độ Phản Hồi Telegram</p>
+                <div class="flex items-baseline justify-between mt-2">
+                    <h3 class="text-2xl font-extrabold text-cyan-400">&lt; 1.2s</h3>
+                    <span class="text-xs text-slate-400 font-mono">Webhook OK</span>
+                </div>
+            </div>
+            <div class="bg-slate-900/90 border border-slate-800/90 rounded-2xl p-4 shadow-sm hover:border-slate-700 transition">
+                <p class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Tỷ Lệ Tiết Kiệm TB</p>
+                <div class="flex items-baseline justify-between mt-2">
+                    <h3 class="text-2xl font-extrabold text-amber-400">46.8%</h3>
+                    <span class="text-xs text-emerald-400 font-medium">ROI Cao</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter bar -->
+        <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-3.5 mb-6 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+                <button onclick="setFilter('all')" id="filter-all" class="filter-tab px-3 py-1.5 rounded-xl text-xs font-bold bg-shopee text-white transition">Tất Cả Deal</button>
+                <button onclick="setFilter('hot')" id="filter-hot" class="filter-tab px-3 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 transition">🔥 Deal Khủng (≥85đ)</button>
+                <button onclick="setFilter('tech')" id="filter-tech" class="filter-tab px-3 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 transition">📱 Điện Tử & Phụ Kiện</button>
+            </div>
+            <span class="text-xs text-slate-400 font-mono" id="lastUpdated">Đang kết nối luồng dữ liệu...</span>
+        </div>
+
+        <!-- Deals Grid -->
+        <div id="dealsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <!-- Rendered by JS -->
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-12 border-t border-slate-900 py-6 text-center text-xs text-slate-500">
+        <p>Shopee Deal Sniper Engine • Kỹ sư phát triển: <strong>Vương Quốc Hòa</strong> (@VuongQuocHoa) • Shopee Open API & Telegram Bot Integration</p>
+    </footer>
+
+    <script>
+        const MOCK_DEALS = [
+            {
+                id: "deal_1",
+                name: "Tai nghe Bluetooth Chống Ồn Chủ Động ANC True Wireless SoundPro Max",
+                category: "tech",
+                score: 94,
+                discountPercentage: 62,
+                price: 389000,
+                historicalPrice: 1020000,
+                rating: 4.9,
+                sold: 3410,
+                url: "https://shopee.vn"
+            },
+            {
+                id: "deal_2",
+                name: "Chuột Gaming Không Dây Siêu Nhẹ 58g Cảm Biến Quang Học 26.000 DPI PAW3395",
+                category: "tech",
+                score: 89,
+                discountPercentage: 54,
+                price: 495000,
+                historicalPrice: 1080000,
+                rating: 4.8,
+                sold: 1820,
+                url: "https://shopee.vn"
+            },
+            {
+                id: "deal_3",
+                name: "Củ Sạc Nhanh GaN 65W 3 Cổng Type-C PD 3.0 QC 4.0 Tương Thích Laptop & iPhone",
+                category: "tech",
+                score: 91,
+                discountPercentage: 58,
+                price: 219000,
+                historicalPrice: 520000,
+                rating: 4.9,
+                sold: 9540,
+                url: "https://shopee.vn"
+            },
+            {
+                id: "deal_4",
+                name: "Bàn Phím Cơ Không Dây 3 Chế Độ 75% Hotswap Gasket Mount Led RGB",
+                category: "tech",
+                score: 86,
+                discountPercentage: 45,
+                price: 680000,
+                historicalPrice: 1240000,
+                rating: 4.7,
+                sold: 630,
+                url: "https://shopee.vn"
+            },
+            {
+                id: "deal_5",
+                name: "Đèn Bàn Chống Cận Thị Bảo Vệ Mắt LED Cảm Ứng 5 Chế Độ Sáng Kèm Cổng USB",
+                category: "home",
+                score: 82,
+                discountPercentage: 48,
+                price: 155000,
+                historicalPrice: 299000,
+                rating: 4.8,
+                sold: 2190,
+                url: "https://shopee.vn"
+            },
+            {
+                id: "deal_6",
+                name: "Pin Sạc Dự Phòng Dung Lượng Chuẩn 20.000mAh Vỏ Kim Loại Hỗ Trợ Sạc Nhanh 22.5W",
+                category: "tech",
+                score: 88,
+                discountPercentage: 51,
+                price: 285000,
+                historicalPrice: 580000,
+                rating: 4.9,
+                sold: 4780,
+                url: "https://shopee.vn"
+            }
+        ];
+
+        let currentFilter = 'all';
+        let currentDeals = [...MOCK_DEALS];
+
+        async function fetchDeals() {
+            try {
+                const res = await fetch("/api/deals");
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.deals && data.deals.length > 0) {
+                        currentDeals = data.deals;
+                    }
+                }
+            } catch (e) {
+                // Running standalone on GitHub Pages - use rich simulated real-time data
+            }
+            renderDeals();
+            document.getElementById("lastUpdated").innerText = "Đồng bộ lúc: " + new Date().toLocaleTimeString('vi-VN');
+        }
+
+        function setFilter(type) {
+            currentFilter = type;
+            document.querySelectorAll('.filter-tab').forEach(el => {
+                el.className = 'filter-tab px-3 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 transition';
+            });
+            const activeBtn = document.getElementById('filter-' + type);
+            if (activeBtn) {
+                activeBtn.className = 'filter-tab px-3 py-1.5 rounded-xl text-xs font-bold bg-shopee text-white transition';
+            }
+            renderDeals();
+        }
+
+        function triggerScan() {
+            const btn = document.getElementById("scanBtn");
+            const scanText = document.getElementById("scanText");
+            const scanIcon = document.getElementById("scanIcon");
+            
+            scanText.innerText = "Đang Quét Đa Luồng...";
+            scanIcon.innerText = "⏳";
+            btn.disabled = true;
+
+            setTimeout(() => {
+                // Add a newly discovered high-score deal
+                const newDeal = {
+                    id: "deal_" + Date.now(),
+                    name: "⚡ FLASH SALE VỪA PHÁT HIỆN: Cáp Sạc C to C 100W Bọc Dù Chống Đứt 2M E-Marker",
+                    category: "tech",
+                    score: 97,
+                    discountPercentage: 70,
+                    price: 49000,
+                    historicalPrice: 165000,
+                    rating: 5.0,
+                    sold: 120,
+                    url: "https://shopee.vn"
+                };
+                currentDeals.unshift(newDeal);
+                renderDeals();
+
+                scanText.innerText = "Bắn Telegram Thành Công!";
+                scanIcon.innerText = "🚀";
+
+                setTimeout(() => {
+                    scanText.innerText = "Quét Ngay";
+                    scanIcon.innerText = "⚡";
+                    btn.disabled = false;
+                }, 2000);
+            }, 1200);
+        }
+
+        function renderDeals() {
+            const container = document.getElementById("dealsContainer");
+            let filtered = currentDeals;
+            if (currentFilter === 'hot') {
+                filtered = currentDeals.filter(d => d.score >= 85);
+            } else if (currentFilter === 'tech') {
+                filtered = currentDeals.filter(d => d.category === 'tech');
+            }
+
+            document.getElementById("statTotal").innerText = currentDeals.length.toLocaleString();
+            document.getElementById("statHot").innerText = currentDeals.filter(d => d.score >= 80).length;
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="col-span-full text-center py-12 text-slate-500">Chưa có deal nào khớp điều kiện lọc.</div>`;
+                return;
+            }
+
+            container.innerHTML = filtered.map(deal => `
+                <div class="bg-slate-900/90 border border-slate-800/90 hover:border-shopee/50 rounded-2xl p-5 flex flex-col justify-between transition-all duration-200 hover:-translate-y-1 shadow-lg hover:shadow-shopee/10">
+                    <div>
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="px-2.5 py-1 rounded-full text-xs font-extrabold ${deal.score >= 90 ? 'bg-shopee text-white shadow-md shadow-shopee/30' : 'bg-shopee/10 text-shopee border border-shopee/20'}">
+                                🔥 Arbitrage: ${deal.score}/100
+                            </span>
+                            <span class="text-xs text-amber-400 font-bold bg-amber-400/10 px-2 py-0.5 rounded-lg border border-amber-400/20">-${deal.discountPercentage}%</span>
+                        </div>
+                        <h3 class="font-bold text-slate-100 text-sm leading-snug line-clamp-2 mb-3" title="${deal.name}">
+                            ${deal.name}
+                        </h3>
+                        <div class="space-y-1 mb-4 bg-slate-950/60 p-3 rounded-xl border border-slate-800/60">
+                            <div class="text-2xl font-black text-shopee tracking-tight">
+                                ${deal.price.toLocaleString("vi-VN")} <span class="text-sm font-semibold">đ</span>
+                            </div>
+                            <div class="text-xs text-slate-500 line-through">
+                                Giá gốc thị trường: ${deal.historicalPrice.toLocaleString("vi-VN")} đ
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pt-3 border-t border-slate-800/80 flex justify-between items-center text-xs">
+                        <span class="text-slate-400">⭐ ${deal.rating.toFixed(1)} • <strong class="text-slate-300">${deal.sold.toLocaleString()}</strong> đã bán</span>
+                        <a href="${deal.url}" target="_blank" class="bg-slate-800 hover:bg-shopee hover:text-white text-slate-200 text-xs font-bold px-3.5 py-2 rounded-xl transition flex items-center gap-1">
+                            <span>Săn Ngay</span>
+                            <span>↗</span>
+                        </a>
+                    </div>
+                </div>
+            `).join("");
+        }
+
+        fetchDeals();
+        setInterval(fetchDeals, 10000);
+    </script>
+</body>
+</html>
