@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopee Deal Sniper - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        shopee: "#ee4d2d",
+                        shopeeDark: "#d73211"
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+    <!-- Header -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="bg-shopee p-2 rounded-xl font-bold text-white shadow-lg shadow-shopee/30">🎯</div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-wide">Shopee Deal Sniper</h1>
+                    <p class="text-xs text-slate-400">Hệ thống săn deal tự động & Chấm điểm Arbitrage</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <span class="w-2 h-2 mr-1.5 bg-emerald-400 rounded-full animate-pulse"></span> Hệ thống đang chạy 24/7
+                </span>
+                <button onclick="triggerScan()" class="bg-shopee hover:bg-shopeeDark text-white px-4 py-2 rounded-xl text-sm font-semibold transition shadow-lg shadow-shopee/20 flex items-center space-x-1">
+                    <span>Quét ngay</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 py-6">
+        <!-- Stats Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm">
+                <p class="text-slate-400 text-sm font-medium">Tổng Deal Đã Săn</p>
+                <h3 id="statTotal" class="text-3xl font-bold mt-2 text-white">0</h3>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm">
+                <p class="text-slate-400 text-sm font-medium">Deal Điểm Cao (&gt;=80)</p>
+                <h3 id="statHot" class="text-3xl font-bold mt-2 text-shopee">0</h3>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm">
+                <p class="text-slate-400 text-sm font-medium">Trạng thái Telegram Bot</p>
+                <h3 id="statBot" class="text-lg font-semibold mt-2 text-emerald-400">Đã kết nối</h3>
+            </div>
+        </div>
+
+        <!-- Deals Feed Header -->
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-bold text-white flex items-center space-x-2">
+                <span>🔥 Danh sách Deal Hời Thời Gian Thực</span>
+            </h2>
+            <span class="text-xs text-slate-400" id="lastUpdated">Cập nhật: Đang tải...</span>
+        </div>
+
+        <!-- Deals Grid -->
+        <div id="dealsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div class="col-span-full text-center py-12 text-slate-500">
+                Đang chờ dữ liệu quét từ Shopee... Hãy nhấn "Quét ngay" để bắt đầu.
+            </div>
+        </div>
+    </main>
+
+    <script>
+        async function fetchDeals() {
+            try {
+                const res = await fetch("/api/deals");
+                const data = await res.json();
+                renderDeals(data.deals);
+                document.getElementById("lastUpdated").innerText = "Cập nhật lúc: " + new Date().toLocaleTimeString();
+            } catch (e) {
+                console.error("Lỗi lấy dữ liệu:", e);
+            }
+        }
+
+        async function triggerScan() {
+            const btn = event.target;
+            btn.innerText = "Đang quét...";
+            btn.disabled = true;
+            try {
+                await fetch("/api/scan", { method: "POST" });
+                await fetchDeals();
+            } catch (e) {
+                alert("Lỗi kích hoạt quét");
+            }
+            btn.innerText = "Quét ngay";
+            btn.disabled = false;
+        }
+
+        function renderDeals(deals) {
+            const container = document.getElementById("dealsContainer");
+            document.getElementById("statTotal").innerText = deals.length;
+            document.getElementById("statHot").innerText = deals.filter(d => d.score >= 80).length;
+
+            if (deals.length === 0) {
+                container.innerHTML = `<div class="col-span-full text-center py-12 text-slate-500">Chưa có deal nào khớp điều kiện.</div>`;
+                return;
+            }
+
+            container.innerHTML = deals.map(deal => `
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between hover:border-slate-700 transition shadow-lg">
+                    <div>
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="px-3 py-1 rounded-full text-xs font-bold bg-shopee/10 text-shopee border border-shopee/20">
+                                🔥 Điểm: ${deal.score}/100
+                            </span>
+                            <span class="text-xs text-slate-400 font-medium">Giảm ${deal.discountPercentage}%</span>
+                        </div>
+                        <h3 class="font-semibold text-slate-200 text-sm line-clamp-2 mb-3" title="${deal.name}">
+                            ${deal.name}
+                        </h3>
+                        <div class="space-y-1 mb-4">
+                            <div class="text-xl font-extrabold text-white">
+                                ${deal.price.toLocaleString("vi-VN")} đ
+                            </div>
+                            <div class="text-xs text-slate-500 line-through">
+                                Gốc ước tính: ${deal.historicalPrice.toLocaleString("vi-VN")} đ
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pt-4 border-t border-slate-800/80 flex justify-between items-center">
+                        <span class="text-xs text-slate-400">⭐ ${deal.rating.toFixed(1)} (${deal.sold} đã bán)</span>
+                        <a href="${deal.url}" target="_blank" class="bg-slate-800 hover:bg-shopee hover:text-white text-slate-200 text-xs font-semibold px-4 py-2 rounded-xl transition flex items-center space-x-1">
+                            <span>Xem Shopee ↗</span>
+                        </a>
+                    </div>
+                </div>
+            `).join("");
+        }
+
+        // Tự động làm mới dữ liệu mỗi 5 giây
+        fetchDeals();
+        setInterval(fetchDeals, 5000);
+    </script>
+</body>
+</html>
