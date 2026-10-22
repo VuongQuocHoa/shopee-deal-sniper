@@ -1,5 +1,12 @@
 # 🎯 Shopee Deal Sniper & Price Scraper
 
+<div align="center">
+
+[![Live Demo on Render](https://img.shields.io/badge/🌐_Live_Demo-Render-00f0ff?style=for-the-badge&logo=render&logoColor=white)](https://vuongquochoa-shopee-deal-sniper.onrender.com/)
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github)](https://github.com/VuongQuocHoa/shopee-deal-sniper)
+
+</div>
+
 > **Hệ thống bot tự động cào dữ liệu TMĐT, chấm điểm độ hời và cảnh báo tức thời qua Telegram Webhook**
 
 Hệ thống bot Node.js đa luồng liên tục quét các sản phẩm giảm giá chớp nhoáng (Flash Sale) trên sàn thương mại điện tử Shopee, tự động tính điểm hời sản phẩm và gửi thông báo qua Telegram Webhook kèm ảnh, giá gốc, giá sale và link mua trực tiếp.
